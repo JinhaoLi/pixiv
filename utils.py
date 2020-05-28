@@ -97,8 +97,30 @@ def get_resp_info(resp):
     return url + "\n" + resp_type + "\n" + more_info + "\n"
 
 
+def save_pixiv_zip(illust_id, save_dir, jump_exist=0):
+    if not save_dir.endswith("\\"):
+        save_dir = save_dir + "\\"
+    if not os.path.exists(save_dir):
+        os.makedirs(save_dir)
+    url = "https://www.pixiv.net/ajax/illust/{}/ugoira_meta?lang=zh_tw".format(illust_id)
+    json_text = get_html_utf8_text_with_cookie(url, headers)
+    json_obj = json.loads(json_text)
+    zip_url = json_obj.get("body").get("src")
+    print("▶▶▶-->正在下载[动图]：" + zip_url)
+    req = request.Request(zip_url, headers=headers)
+    req.add_header("referer", "https://www.pixiv.net/")
+    try:
+        zip_resp = request.urlopen(req,timeout=30)
+        print("▶▶▶-->图片大小：", "{}MB\t----->".format(get_resp_len(zip_resp)), end="\t")
+        with open(save_dir+get_file_name_from_url(zip_url),"wb") as f:
+            f.write(zip_resp.read())
+            print("✔下载成功")
+    except IOError as e:
+        print("✘下载失败" + str(e))
+
+
 # pixiv专用
-def save_pixiv_pic(illust_id, save_dir):
+def save_pixiv_pic(illust_id, save_dir, jump_exist=0):
     if not save_dir.endswith("\\"):
         save_dir = save_dir + "\\"
     if not os.path.exists(save_dir):
@@ -110,22 +132,29 @@ def save_pixiv_pic(illust_id, save_dir):
     second_paras = IllustParser()
     second_paras.feed(illust_page_text)
     illust_json = json.loads(second_paras.json_text)
+    if illust_json.get("illust").get(str(illust_id)).get('illustType') == 2:
+        save_pixiv_zip(illust_id,save_dir)
+        return
     pic_count = illust_json.get("illust").get(str(illust_id)).get("pageCount")
     original_url = illust_json.get("illust").get(str(illust_id)).get("urls").get("original")
     split_url = original_url.split("_")
     print("▶▶共" + str(pic_count) + "张图")
     for i in range(pic_count):
         pic_url = split_url[0] + "_p" + str(i) + "." + split_url[1].split(".")[1]
-        print("▶▶▶-->正在下载["+str(i)+"]：" + pic_url)
+        print("▶▶▶-->正在下载[" + str(i) + "]：" + pic_url)
+        illust_file_name = save_dir + get_file_name_from_url(pic_url)
+        if jump_exist == 1 and os.path.exists(illust_file_name):
+            print("※文件已存在！跳过")
+            continue
         req = request.Request(pic_url, headers=headers)
         req.add_header("referer", "https://www.pixiv.net/")
         try:
             resp = request.urlopen(req, timeout=20)
             print("▶▶▶-->图片大小：", "{}MB\t----->".format(get_resp_len(resp)), end="\t")
-            with open(save_dir + get_file_name_from_url(pic_url), "wb")as pic:
+            with open(illust_file_name, "wb")as pic:
                 pic.write(resp.read())
             print("✔下载成功")
         except IOError as e:
-            print("✘下载失败" + e)
+            print("✘下载失败" + str(e))
     print("=================================================▶")
     pass
