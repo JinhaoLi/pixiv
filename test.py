@@ -1,21 +1,16 @@
-import time,utils
+import json
+import os
+import zipfile
+from urllib import request
+from io import BytesIO
+import utils
+import imageio
 
-'''取消证书验证'''
-import ssl
-ssl._create_default_https_context = ssl._create_unverified_context
-utils.save_pixiv_pic(70236171,"D:\\pixiv")
-print("▶--正在下载：" + "https://www.pixiv.net")
-print("▶--图片大小：", "{}MB\t------→".format(2.23), end="\t")
-print("✔下载成功")
-#print("✘下载失败")
-print("=================================================▶")
-print("▶--正在下载：" + "https://www.pixiv.net")
-print("▶--图片大小：", "{}MB\t------→".format(2.23), end="\t")
-print("✔下载成功")
-#print("✘下载失败")
-print("=================================================▶")
-print("▶-->正在下载：" + "https://www.pixiv.net")
-print("▶-->图片大小：", "{}MB\t------→".format(2.23), end="\t")
-print("✔下载成功")
-#print("✘下载失败")
-print("=================================================▶")
+headers = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) '
+                  'Chrome/79.0.3945.117 Safari/537.36 '
+}
+
+
+utils.save_pixiv_pic(72668787,"D:\\pixiv\\zip_gif\\")
+utils.save_pixiv_pic(81235129,"D:\\pixiv\\zip_gif\\")

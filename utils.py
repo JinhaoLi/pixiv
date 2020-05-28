@@ -1,6 +1,10 @@
 import json
 import os
+import zipfile
+from io import BytesIO
 from urllib import request
+import threading
+import imageio
 
 from IllustParser import IllustParser
 
@@ -110,14 +114,59 @@ def save_pixiv_zip(illust_id, save_dir, jump_exist=0):
     req = request.Request(zip_url, headers=headers)
     req.add_header("referer", "https://www.pixiv.net/")
     try:
-        zip_resp = request.urlopen(req,timeout=30)
+        zip_resp = request.urlopen(req, timeout=30)
         print("▶▶▶-->图片大小：", "{}MB\t----->".format(get_resp_len(zip_resp)), end="\t")
-        with open(save_dir+get_file_name_from_url(zip_url),"wb") as f:
+        with open(save_dir + get_file_name_from_url(zip_url), "wb") as f:
             f.write(zip_resp.read())
             print("✔下载成功")
     except IOError as e:
         print("✘下载失败" + str(e))
+    pass
 
+
+def save_pixiv_gif(illust_id, save_dir,jump_exist=0,quality=0):
+    if not save_dir.endswith("\\"):
+        save_dir = save_dir + "\\"
+    if not os.path.exists(save_dir):
+        os.makedirs(save_dir)
+    file_path=save_dir + str(illust_id) + '.gif'
+    if jump_exist == 1 and os.path.exists(file_path):
+        print("※文件已存在！跳过")
+        return
+    url = "https://www.pixiv.net/ajax/illust/{}/ugoira_meta?lang=zh_tw".format(illust_id)
+    json_text = get_html_utf8_text_with_cookie(url, headers)
+    json_obj = json.loads(json_text)
+    # 图片质量600*600
+    zip_url = json_obj.get("body").get("src")
+    delay = json_obj['body']['frames'][1]['delay']
+    fps = 1000/delay
+    print("▶▶▶-->正在下载[动图]：" + zip_url)
+    req = request.Request(zip_url, headers=headers)
+    req.add_header("referer", "https://www.pixiv.net/")
+    try:
+        zip_resp = request.urlopen(req, timeout=30)
+        print("▶▶▶-->图片大小：", "{}MB\t----->".format(get_resp_len(zip_resp)), end="\t")
+        pic_bytes = zip_resp.read()
+        t1 = threading.Thread(target=zip_to_gif, args=(pic_bytes,file_path,int(fps)))
+        t1.start()
+        # zip_to_gif(zip_resp.read(),save_dir+str(illust_id)+'.gif')
+    except IOError as e:
+        print("✘下载失败" + str(e))
+    pass
+
+
+def zip_to_gif(zip_bytes, file_path, fps=40):
+    fio = BytesIO(zip_bytes)
+    myzip = zipfile.ZipFile(fio)
+    print('多线程合成zip中的{}张图片到gif'.format(len(myzip.namelist())), end='->')
+    frames = []
+    for zip_f in myzip.filelist:
+        print('>', end='')
+        zip_file = BytesIO(myzip.read(zip_f))
+        frames.append(imageio.imread(zip_file))
+    imageio.mimsave(file_path, frames, 'GIF', fps=fps)
+    print('▶▶▶gif合成成功{}'.format(file_path))
+    pass
 
 # pixiv专用
 def save_pixiv_pic(illust_id, save_dir, jump_exist=0):
@@ -133,7 +182,7 @@ def save_pixiv_pic(illust_id, save_dir, jump_exist=0):
     second_paras.feed(illust_page_text)
     illust_json = json.loads(second_paras.json_text)
     if illust_json.get("illust").get(str(illust_id)).get('illustType') == 2:
-        save_pixiv_zip(illust_id,save_dir)
+        save_pixiv_gif(illust_id, save_dir,jump_exist)
         return
     pic_count = illust_json.get("illust").get(str(illust_id)).get("pageCount")
     original_url = illust_json.get("illust").get(str(illust_id)).get("urls").get("original")
