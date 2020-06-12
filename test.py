@@ -1,16 +1,18 @@
 import json
-import os
-import zipfile
-from urllib import request
-from io import BytesIO
+
 import utils
-import imageio
 
-headers = {
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) '
-                  'Chrome/79.0.3945.117 Safari/537.36 '
-}
+"""
+    下载已经筛选的数据
+"""
+with open('wait_to_download\\R18_viewCount_5000.json', 'r') as f:
+    js_text=f.read()
+r18_5000=json.loads(js_text)
+for illust in r18_5000:
+    _jo =json.loads(illust)
+    _jo_ill =_jo['illust']
+    for d in _jo_ill:
+        utils.save_pixiv_pic(_jo_ill[d]['illustId'],"D:\\pixiv\\like\\", 1)
+print(len(r18_5000))
 
 
-utils.save_pixiv_pic(72668787,"D:\\pixiv\\zip_gif\\")
-utils.save_pixiv_pic(81235129,"D:\\pixiv\\zip_gif\\")

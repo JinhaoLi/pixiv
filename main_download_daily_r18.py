@@ -20,6 +20,8 @@ else:
     print("----->创建文件夹！")
     os.makedirs(save_dir)
 html_text = utils.get_html_utf8_text_with_cookie(url, headers)
+if html_text is None:
+    exit(-1)
 paras = daily.DailyParser()
 paras.feed(html_text)
 id_count = len(paras.data)
