@@ -1,10 +1,8 @@
-import threading
-import cv2
-import utils
-import pyperclip
-import time
 import re
-import PIL
+import threading
+import time
+import pyperclip
+import utils
 
 '''
 每隔一秒监测剪切板变化 ，有变化就解析获取id，获取到id就执行下载

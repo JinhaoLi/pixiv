@@ -15,7 +15,7 @@ print("▶-->下载{}的R18排行榜".format(date),end="\t")
 save_dir = root_dir + "\\" + "daily_r18_" + date
 if os.path.exists(save_dir):
     print("----->文件夹已存在！")
-    exit(0)
+    # exit(0)
 else:
     print("----->创建文件夹！")
     os.makedirs(save_dir)
