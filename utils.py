@@ -8,6 +8,11 @@ import imageio
 
 from IllustParser import IllustParser
 
+proxy_handle = request.ProxyHandler({
+    'http': '127.0.0.1:1080',
+    'https': '127.0.0.1:1080'
+})
+opener = request.build_opener(proxy_handle)
 headers = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) '
                   'Chrome/79.0.3945.117 Safari/537.36 '
@@ -55,6 +60,23 @@ def get_html_utf8_text(url, headers):
     req = request.Request(url, headers=headers)
     try:
         resp = request.urlopen(req, timeout=10).read()
+    except:
+        print("获取{}超时".format(url))
+        return None
+    text = resp.decode("utf-8")
+    return text
+
+
+def proxy_get_html_utf8_text(url, headers):
+    """
+    代理发起请求并编码接收到的响应为utf8
+    :param url:
+    :param headers:
+    :return:
+    """
+    req = request.Request(url, headers=headers)
+    try:
+        resp = opener.open(req, timeout=10).read()
     except:
         print("获取{}超时".format(url))
         return None
@@ -228,14 +250,18 @@ def zip_to_gif(zip_bytes, file_path, fps=40):
     pass
 
 
-def json_obj_from_id(illust_id):
+def json_obj_from_id(illust_id, use_proxy=False):
     """
     获取插画的json 对象
+    :param use_proxy:
     :param illust_id: 插画id
     :return:
     """
     illust_url_temp = "https://www.pixiv.net/artworks/"
-    illust_page_text = get_html_utf8_text(illust_url_temp + str(illust_id), headers)
+    if use_proxy:
+        illust_page_text = proxy_get_html_utf8_text(illust_url_temp + str(illust_id), headers)
+    else:
+        illust_page_text = get_html_utf8_text(illust_url_temp + str(illust_id), headers)
     if illust_page_text is None:
         return None
     second_paras = IllustParser()
