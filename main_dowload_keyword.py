@@ -24,7 +24,7 @@ def found_illust(page=1):
     print(encode_param)
     start_url = base_url.format(param['word']) + encode_param
     print(start_url)
-    json_text = utils.proxy_get_html_utf8_text(start_url, utils.headers)
+    json_text = utils.get_html_utf8_text(start_url, utils.headers, True)
     if json_text is None:
         found_illust(page+1)
         return

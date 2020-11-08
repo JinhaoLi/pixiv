@@ -30,9 +30,10 @@ def get_file_name_from_url(url):
     return url_split[len(url_split) - 1]
 
 
-def get_html_utf8_text_with_cookie(url, headers):
+def get_html_utf8_text_with_cookie(url, headers, use_proxy=True):
     """
         带cookie发起请求并编码接收到的响应为utf8
+        :param use_proxy:
         :param url:
         :param headers:
         :return:
@@ -42,7 +43,10 @@ def get_html_utf8_text_with_cookie(url, headers):
         cookie = f.read().decode("utf-8")
     req.add_header("Cookie", cookie)
     try:
-        resp = request.urlopen(req, timeout=20).read()
+        if use_proxy:
+            resp = opener.open(req, timeout=20).read()
+        else:
+            resp = request.urlopen(req, timeout=20).read()
     except Exception as e:
         print("获取{}超时:".format(url)+'\n'+e.__str__())
         return None
@@ -50,16 +54,20 @@ def get_html_utf8_text_with_cookie(url, headers):
     return text
 
 
-def get_html_utf8_text(url, headers):
+def get_html_utf8_text(url, headers, use_proxy=True):
     """
     发起请求并编码接收到的响应为utf8
+    :param use_proxy: 
     :param url:
     :param headers:
     :return:
     """
     req = request.Request(url, headers=headers)
     try:
-        resp = request.urlopen(req, timeout=10).read()
+        if use_proxy:
+            resp = opener.open(req, timeout=10).read()
+        else:
+            resp = request.urlopen(req, timeout=10).read()
     except:
         print("获取{}超时".format(url))
         return None
@@ -67,24 +75,7 @@ def get_html_utf8_text(url, headers):
     return text
 
 
-def proxy_get_html_utf8_text(url, headers):
-    """
-    代理发起请求并编码接收到的响应为utf8
-    :param url:
-    :param headers:
-    :return:
-    """
-    req = request.Request(url, headers=headers)
-    try:
-        resp = opener.open(req, timeout=10).read()
-    except:
-        print("获取{}超时".format(url))
-        return None
-    text = resp.decode("utf-8")
-    return text
-
-
-def get_html_soure(url, headers=None, timeout=20):
+def get_html_soure(url, headers=None, timeout=20, use_proxy=True):
     """
     发起请求并接收响应
     :param url:
@@ -92,12 +83,19 @@ def get_html_soure(url, headers=None, timeout=20):
     :param timeout:
     :return:
     """
-    req = request.Request(url, headers=headers)
-    resp = request.urlopen(req, timeout=timeout)
-    return resp
+    try:
+        req = request.Request(url, headers=headers)
+        if use_proxy:
+            resp = opener.open(req, timeout=timeout)
+        else:
+            resp = request.urlopen(req, timeout=timeout)
+        return resp
+    except Exception as e:
+        print(e.__str__())
+        return None
+    
 
-
-def get_html_soure_with_cookie(url, headers=None):
+def get_html_soure_with_cookie(url, headers=None, use_proxy=True):
     """
     带cookie发起请求并接收
     :param url:
@@ -112,7 +110,10 @@ def get_html_soure_with_cookie(url, headers=None):
     except Exception as e:
         print("cookie文件读取失败!"+str(e))
     try:
-        resp = request.urlopen(req, timeout=10)
+        if use_proxy:
+            resp = opener.open(req, timeout=10)
+        else:
+            resp = request.urlopen(req, timeout=10)
     except:
         print("获取{}超时".format(url))
         return None
@@ -140,6 +141,34 @@ def get_resp_len(resp):
     """
         获取response的大小，单位mb，类型float，保留两位小数
     """
+    # todo
+#     Traceback(most
+#     recent
+#     call
+#     last):
+#     File
+#     "F:/CodeSource/python/pixiv/main_download_user_creative.py", line
+#     23, in < module >
+#     utils.save_pixiv_pic(illust, root_dir, 1)
+#
+#
+# File
+# "F:\CodeSource\python\pixiv\utils.py", line
+# 360, in save_pixiv_pic
+# print("▶▶▶-->图片大小：", "{}MB\t----->".format(get_resp_len(resp)), end="\t")
+# File
+# "F:\CodeSource\python\pixiv\utils.py", line
+# 144, in get_resp_len
+# lenght = int(resp.info()['content-length'])
+# TypeError: int()
+# argument
+# must
+# be
+# a
+# string, a
+# bytes - like
+# object or a
+# number, not 'NoneType'
     lenght = int(resp.info()['content-length'])
     lenght_mb = round(lenght / (1024 * 1024), 2)
     return lenght_mb
@@ -155,7 +184,7 @@ def get_resp_info(resp):
     return url, resp_type, more_info
 
 
-def save_pixiv_zip(illust_id, save_dir, jump_exist=0):
+def save_pixiv_zip(illust_id, save_dir, jump_exist=0, use_proxy=True):
     """
     保存动图的zip文件
     :param illust_id: 插画id
@@ -175,7 +204,10 @@ def save_pixiv_zip(illust_id, save_dir, jump_exist=0):
     req = request.Request(zip_url, headers=headers)
     req.add_header("referer", "https://www.pixiv.net/")
     try:
-        zip_resp = request.urlopen(req, timeout=30)
+        if use_proxy:
+            zip_resp = opener.open(req, timeout=30)
+        else:
+            zip_resp = request.urlopen(req, timeout=30)
         print("▶▶▶-->图片大小：", "{}MB\t----->".format(get_resp_len(zip_resp)), end="\t")
         with open(save_dir + get_file_name_from_url(zip_url), "wb") as f:
             f.write(zip_resp.read())
@@ -185,7 +217,7 @@ def save_pixiv_zip(illust_id, save_dir, jump_exist=0):
     pass
 
 
-def save_pixiv_gif(illust_id, save_dir, jump_exist=0, quality=0):
+def save_pixiv_gif(illust_id, save_dir, jump_exist=0, quality=0, use_proxy=True):
     """
     保存动图
     :param illust_id: 动图id
@@ -219,7 +251,10 @@ def save_pixiv_gif(illust_id, save_dir, jump_exist=0, quality=0):
     req = request.Request(zip_url, headers=headers)
     req.add_header("referer", "https://www.pixiv.net/")
     try:
-        zip_resp = request.urlopen(req, timeout=30)
+        if use_proxy:
+            zip_resp = opener.open(req, timeout=30)
+        else:
+            zip_resp = request.urlopen(req, timeout=30)
         print("▶▶▶-->图片大小：", "{}MB\t----->".format(get_resp_len(zip_resp)), end="\t")
         pic_bytes = zip_resp.read()
         t1 = threading.Thread(target=zip_to_gif, args=(pic_bytes, file_path, int(fps)))
@@ -250,7 +285,7 @@ def zip_to_gif(zip_bytes, file_path, fps=40):
     pass
 
 
-def json_obj_from_id(illust_id, use_proxy=False):
+def json_obj_from_id(illust_id, use_proxy=True):
     """
     获取插画的json 对象
     :param use_proxy:
@@ -258,10 +293,8 @@ def json_obj_from_id(illust_id, use_proxy=False):
     :return:
     """
     illust_url_temp = "https://www.pixiv.net/artworks/"
-    if use_proxy:
-        illust_page_text = proxy_get_html_utf8_text(illust_url_temp + str(illust_id), headers)
-    else:
-        illust_page_text = get_html_utf8_text(illust_url_temp + str(illust_id), headers)
+    illust_page_text = get_html_utf8_text(illust_url_temp + str(illust_id), headers, use_proxy)
+
     if illust_page_text is None:
         return None
     second_paras = IllustParser()
@@ -313,7 +346,7 @@ def save_pixiv_pic_only_gif(illust_id, save_dir, jump_exist=0):
 
 
 # pixiv专用
-def save_pixiv_pic(illust_id, save_dir, jump_exist=0):
+def save_pixiv_pic(illust_id, save_dir, jump_exist=0, use_proxy=True):
     """
     下载此illust_id 的插画
     不分类型
@@ -344,11 +377,14 @@ def save_pixiv_pic(illust_id, save_dir, jump_exist=0):
         illust_file_name = save_dir + get_file_name_from_url(pic_url)
         if jump_exist == 1 and os.path.exists(illust_file_name):
             print("※文件已存在！跳过")
-            continue
+            break
         req = request.Request(pic_url, headers=headers)
         req.add_header("referer", "https://www.pixiv.net/")
         try:
-            resp = request.urlopen(req, timeout=20)
+            if use_proxy:
+                resp = opener.open(req, timeout=20)
+            else:
+                resp = request.urlopen(req, timeout=20)
             print("▶▶▶-->图片大小：", "{}MB\t----->".format(get_resp_len(resp)), end="\t")
             with open(illust_file_name, "wb")as pic:
                 pic.write(resp.read())
