@@ -1,7 +1,9 @@
 import json
 import urllib.parse as parse
 import utils
-
+"""
+根据关键词下载
+"""
 base_url = 'https://www.pixiv.net/ajax/search/illustrations/' \
            '{}?'
 param = {
@@ -22,7 +24,7 @@ def found_illust(page=1):
     print(encode_param)
     start_url = base_url.format(param['word']) + encode_param
     print(start_url)
-    json_text = utils.get_html_utf8_text(start_url, utils.headers)
+    json_text = utils.proxy_get_html_utf8_text(start_url, utils.headers)
     if json_text is None:
         found_illust(page+1)
         return
@@ -30,10 +32,10 @@ def found_illust(page=1):
     id_list = json_obj['body']['illust']['data']
 
     for id_illust in id_list:
-        root_obj = utils.json_obj_from_id(id_illust['illustId'])
+        root_obj = utils.json_obj_from_id(id_illust['id'], True)
         if root_obj is None:
             continue
-        _j_obj = root_obj['illust'][id_illust['illustId']]
+        _j_obj = root_obj['illust'][id_illust['id']]
         bookmarkCount = _j_obj['bookmarkCount']
         viewCount = _j_obj['viewCount']
         likeCount = _j_obj['likeCount']
@@ -56,7 +58,7 @@ def found_illust(page=1):
 
 
 try:
-    found_illust(25)
+    found_illust(1)
 except Exception as e:
     print('异常退出(尝试保存数据)：'+e.__str__())
     json_list = json.dumps(wait_to_download)
